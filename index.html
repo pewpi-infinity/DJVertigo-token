@@ -425,15 +425,19 @@ window.addEventListener('resize', drawChart);
   <div style="background:#111;border:1px solid #333;border-radius:12px;padding:16px;margin-bottom:16px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <span style="color:#888;font-size:0.8rem">Token Price</span>
-      <span style="color:#FFD700;font-size:1.3rem;font-weight:700">$1.00</span>
+      <span style="color:#FFD700;font-size:1.3rem;font-weight:700" id="buy-token-price">$1.00</span>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <span style="color:#888;font-size:0.8rem">Chart Value</span>
-      <span style="color:#22c55e;font-size:1.1rem;font-weight:600">$30.00</span>
+      <span style="color:#22c55e;font-size:1.1rem;font-weight:600" id="buy-chart-value">$—</span>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center">
       <span style="color:#888;font-size:0.8rem">Status</span>
       <span style="color:#22c55e;font-size:0.85rem">Early Access &mdash; Limited Supply</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid #222">
+      <span style="color:#888;font-size:0.8rem">You Save</span>
+      <span style="color:#22c55e;font-size:1.1rem;font-weight:700" id="buy-savings">—</span>
     </div>
   </div>
 
@@ -469,22 +473,56 @@ window.addEventListener('resize', drawChart);
 
   <p style="color:#666;font-size:0.7rem;margin:12px 0 0">
     Tokens are tradeable in the Infinity Marketplace. Chart value reflects current market position.
-    Early buyers get in at $1 while chart value is $30.
+    Buy at $1.00 fixed price — chart value updates live above. Trade in the Infinity Marketplace.
   </p>
 
   <script>
     var tokenQty = 1;
+    var buyPrice = 1.00; // fixed buy price
+
+    // Connect to the chart's live currentPrice
+    function syncChartToShop() {
+      // currentPrice is defined in the chart script above
+      if (typeof currentPrice !== "undefined" && currentPrice > 0) {
+        var chartVal = document.getElementById("buy-chart-value");
+        var savings = document.getElementById("buy-savings");
+        if (chartVal) chartVal.textContent = "$" + currentPrice.toFixed(2);
+        if (savings) {
+          var saved = (currentPrice - buyPrice) * tokenQty;
+          var pct = Math.round(((currentPrice - buyPrice) / currentPrice) * 100);
+          if (saved > 0) {
+            savings.textContent = "$" + saved.toFixed(2) + " (" + pct + "% off chart)";
+          } else {
+            savings.textContent = "At chart price";
+          }
+        }
+        // Update the total display with chart context
+        var totalEl = document.getElementById("total-display");
+        if (totalEl) {
+          var chartTotal = (currentPrice * tokenQty).toFixed(2);
+          totalEl.innerHTML = "Pay: <b>$" + (buyPrice * tokenQty).toFixed(2) + "</b> for " + tokenQty + " token" + (tokenQty > 1 ? "s" : "") +
+            " <span style=\"color:#22c55e;font-size:0.85rem\">(worth $" + chartTotal + " on chart)</span>";
+        }
+      }
+    }
+
     function setQty(n) {
       tokenQty = n;
-      document.getElementById("pp-amount").value = (n * 1).toFixed(2);
+      document.getElementById("pp-amount").value = (n * buyPrice).toFixed(2);
       document.getElementById("pp-item").value = "DJVertigo Token x" + n;
-      document.getElementById("total-display").textContent = "Total: $" + (n * 1).toFixed(2) + " for " + n + " token" + (n > 1 ? "s" : "");
       document.querySelectorAll(".qty-btn").forEach(function(btn) {
         var isActive = parseInt(btn.dataset.qty) === n;
         btn.style.borderColor = isActive ? "#FFD700" : "#444";
         btn.style.color = isActive ? "#FFD700" : "#ccc";
       });
+      syncChartToShop();
     }
+
+    // Sync every 2 seconds so it stays live with the chart ticker
+    setInterval(syncChartToShop, 2000);
+    // Initial sync after chart loads
+    setTimeout(syncChartToShop, 1000);
+
     // Check for purchase confirmation
     if (location.search.includes("purchased=true")) {
       var msg = document.createElement("div");
