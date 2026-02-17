@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="infinity-repo" content="DJVertigo-token">
+<meta name="infinity-token-id" content="DJVertigo">
+<title>🔱 DJVertigo Token — Security Guardian</title>
+<style>
+:root{--bg:#0a0a12;--surface:#12121f;--card:#1a1a2e;--border:#2a2a4a;--text:#e0e0f0;--muted:#7777aa;--accent:#7c4dff;--gold:#ffd700;--green:#00e676;--red:#ff5252;--security:#00bfa5;--radius:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;min-height:100vh}
+a{color:var(--accent);text-decoration:none}
+
+.header{background:linear-gradient(135deg,#0a1a2e,#1a0a2e);padding:20px;text-align:center;border-bottom:3px solid var(--security)}
+.header .shield{font-size:3rem;margin-bottom:8px}
+.header h1{font-size:1.6rem;color:#fff}
+.header .sector{color:var(--security);font-size:0.85rem;margin-top:4px}
+
+.price-ticker{background:var(--surface);padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap}
+.price-main{font-size:3rem;font-weight:900;color:var(--gold)}
+.price-change{font-size:1.1rem;padding:4px 12px;border-radius:8px}
+.price-up{background:rgba(0,230,118,0.15);color:var(--green)}
+.price-info{font-size:0.8rem;color:var(--muted)}
+
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto}
+.tab{padding:10px 20px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;font-size:0.85rem;transition:all 0.2s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--security);border-bottom-color:var(--security)}
+
+.tab-content{display:none;padding:20px}
+.tab-content.active{display:block}
+
+/* Chart */
+.chart-container{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.chart-canvas{width:100%;height:250px;position:relative}
+canvas{width:100%;height:100%}
+
+/* Terminal */
+.terminal{background:#0d0d0d;border:1px solid var(--security);border-radius:var(--radius);font-family:'Courier New',monospace;overflow:hidden}
+.terminal-header{background:#1a2e2e;padding:8px 14px;display:flex;justify-content:space-between;align-items:center}
+.terminal-header span{color:var(--security);font-size:0.8rem;font-weight:600}
+.terminal-body{padding:12px;height:300px;overflow-y:auto;font-size:0.8rem;line-height:1.6;color:#4caf50}
+.terminal-input{display:flex;border-top:1px solid #1a2e2e}
+.terminal-input input{flex:1;background:#0a0a0a;border:none;color:var(--security);padding:10px 14px;font-family:'Courier New',monospace;font-size:0.8rem}
+.terminal-input input:focus{outline:none}
+.terminal-prompt{color:var(--security)}
+
+/* Token card */
+.token-detail{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:16px}
+.detail-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.detail-card .label{font-size:0.7rem;color:var(--muted)}
+.detail-card .val{font-size:1.4rem;font-weight:700;color:var(--gold);margin-top:4px}
+
+/* Hash layers */
+.hash-layers{display:grid;gap:8px;margin-top:12px}
+.hash-layer{background:var(--card);border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px}
+.hash-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.9rem}
+
+/* Links */
+.link-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-top:12px}
+.link-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;align-items:center;gap:8px;color:var(--text);transition:all 0.2s}
+.link-card:hover{border-color:var(--security);text-decoration:none}
+
+.footer{text-align:center;padding:16px;color:var(--muted);font-size:0.7rem;border-top:1px solid var(--border);margin-top:20px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="shield">🔱</div>
+  <h1>DJVertigo Token</h1>
+  <div class="sector">Security / Guardian Class — Infinity Network</div>
+</div>
+
+<div class="price-ticker">
+  <div>
+    <div class="price-main" id="current-price">$1.00</div>
+    <div class="price-info">DJVertigo · Launched Feb 16, 2026 @ 7:36 PM</div>
+  </div>
+  <div>
+    <div class="price-change price-up" id="price-change">+$0.00 today</div>
+    <div class="price-info" style="margin-top:4px" id="growth-info">+$1-$15/day · $0.15 steps</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('chart',this)">📈 Chart</div>
+  <div class="tab" onclick="showTab('terminal',this)">🖥️ Terminal</div>
+  <div class="tab" onclick="showTab('details',this)">🪙 Details</div>
+  <div class="tab" onclick="showTab('hash',this)">🧱 4-Hash</div>
+  <div class="tab" onclick="showTab('network',this)">🌐 Network</div>
+</div>
+
+<!-- Chart Tab -->
+<div class="tab-content active" id="tab-chart">
+  <div class="chart-container">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <b style="font-size:0.9rem">Price History</b>
+      <div style="display:flex;gap:6px">
+        <button onclick="chartRange('1h')" class="chart-btn" style="background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:3px 10px;border-radius:6px;font-size:0.7rem;cursor:pointer">1H</button>
+        <button onclick="chartRange('6h')" class="chart-btn" style="background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:3px 10px;border-radius:6px;font-size:0.7rem;cursor:pointer">6H</button>
+        <button onclick="chartRange('1d')" class="chart-btn active" style="background:var(--accent);border:1px solid var(--accent);color:#fff;padding:3px 10px;border-radius:6px;font-size:0.7rem;cursor:pointer">1D</button>
+        <button onclick="chartRange('all')" class="chart-btn" style="background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:3px 10px;border-radius:6px;font-size:0.7rem;cursor:pointer">ALL</button>
+      </div>
+    </div>
+    <div class="chart-canvas">
+      <canvas id="price-chart"></canvas>
+    </div>
+  </div>
+  <div class="token-detail">
+    <div class="detail-card"><div class="label">Current</div><div class="val" id="d-price">$1.00</div></div>
+    <div class="detail-card"><div class="label">Day High</div><div class="val" id="d-high">$1.00</div></div>
+    <div class="detail-card"><div class="label">Day Low</div><div class="val" id="d-low">$1.00</div></div>
+    <div class="detail-card"><div class="label">Increments</div><div class="val" id="d-inc">0</div></div>
+  </div>
+</div>
+
+<!-- Terminal Tab -->
+<div class="tab-content" id="tab-terminal">
+  <div class="terminal">
+    <div class="terminal-header">
+      <span>DJVertigo Research Terminal v1</span>
+      <span>🔱 Sector: Security Intelligence</span>
+    </div>
+    <div class="terminal-body" id="terminal-body">
+      <div style="color:var(--security)">DJVertigo Research Terminal v1.0</div>
+      <div style="color:#666">🔱 Sector: Security Intelligence</div>
+      <div style="color:#666">Type 'help' for commands</div>
+      <div>&nbsp;</div>
+    </div>
+    <div class="terminal-input">
+      <span style="color:var(--security);padding:10px 0 10px 14px;font-family:monospace;font-size:0.8rem">❯</span>
+      <input type="text" id="term-input" placeholder="enter research query..."
+        onkeydown="if(event.key==='Enter')termSend()">
+    </div>
+  </div>
+</div>
+
+<!-- Details Tab -->
+<div class="tab-content" id="tab-details">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <span style="font-size:2.5rem">🔱</span>
+      <div>
+        <h3 style="font-size:1.1rem">DJVertigo</h3>
+        <div style="color:var(--muted);font-size:0.85rem">Security / Guardian Class Token</div>
+      </div>
+    </div>
+    <div class="token-detail">
+      <div class="detail-card"><div class="label">Owner</div><div class="val" style="font-size:1rem">DJVertigo</div></div>
+      <div class="detail-card"><div class="label">Sector</div><div class="val" style="font-size:1rem">🔱 Security</div></div>
+      <div class="detail-card"><div class="label">Base Price</div><div class="val">$1.00</div></div>
+      <div class="detail-card"><div class="label">Growth</div><div class="val" style="color:var(--green)">+$1-15/d</div></div>
+      <div class="detail-card"><div class="label">Step Size</div><div class="val">$0.15</div></div>
+      <div class="detail-card"><div class="label">Pattern</div><div class="val" style="font-size:1rem">Sporadic</div></div>
+      <div class="detail-card"><div class="label">Launch</div><div class="val" style="font-size:0.9rem">7:36 PM</div></div>
+      <div class="detail-card"><div class="label">Network</div><div class="val" style="font-size:0.9rem">Infinity</div></div>
+    </div>
+    <div style="margin-top:16px;font-size:0.85rem;color:var(--muted);line-height:1.6">
+      <p>Security-class asset representing protective infrastructure research. Value increases daily through sporadic micro-increments of $0.15, with total daily growth between $1 and $15.</p>
+      <p style="margin-top:8px">Part of the Infinity Crown System — connected to 976+ repositories. 4-Hash encoded for blockchain verification.</p>
+      <p style="margin-top:8px;font-size:0.75rem">Note: Andy Lian retains license for Andy Lian Coin (external reference).</p>
+    </div>
+  </div>
+</div>
+
+<!-- 4-Hash Tab -->
+<div class="tab-content" id="tab-hash">
+  <h3 style="font-size:0.95rem;margin-bottom:12px">🧱 4-Hash Encoding System</h3>
+  <div class="hash-layers">
+    <div class="hash-layer">
+      <div class="hash-num" style="background:rgba(229,57,53,0.2);color:#e53935">#1</div>
+      <div><b style="color:#e53935">Sovereign Research</b><br><span style="color:var(--muted);font-size:0.8rem">Security intelligence jump-links to sub-tokens and threat databases</span></div>
+    </div>
+    <div class="hash-layer">
+      <div class="hash-num" style="background:rgba(255,152,0,0.2);color:#ff9800">#2</div>
+      <div><b style="color:#ff9800">Validation Data</b><br><span style="color:var(--muted);font-size:0.8rem">Raw logic chain, source verification, threat signature validation</span></div>
+    </div>
+    <div class="hash-layer">
+      <div class="hash-num" style="background:rgba(255,215,0,0.2);color:#ffd700">#3</div>
+      <div><b style="color:#ffd700">Bibliography/Network</b><br><span style="color:var(--muted);font-size:0.8rem">Research articles, security papers, threat intelligence sources</span></div>
+    </div>
+    <div class="hash-layer">
+      <div class="hash-num" style="background:rgba(76,175,80,0.2);color:#4caf50">#4</div>
+      <div><b style="color:#4caf50">Master Zip</b><br><span style="color:var(--muted);font-size:0.8rem">Unified token package — blockchain-verified research bundle</span></div>
+    </div>
+  </div>
+  <div style="margin-top:16px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:monospace;font-size:0.75rem;color:var(--security)">
+    HASH-ID: INF-DJVERTIGO-<span id="hash-id"></span><br>
+    SECTOR: SECURITY/GUARDIAN<br>
+    STATUS: ACTIVE<br>
+    ENCODED: <span id="hash-time"></span>
+  </div>
+</div>
+
+<!-- Network Tab -->
+<div class="tab-content" id="tab-network">
+  <h3 style="font-size:0.95rem;margin-bottom:12px">🌐 Infinity Network Connections</h3>
+  <div class="link-grid">
+    <a class="link-card" href="https://pewpi-infinity.github.io/infinity-crown-index/">👑 Crown Index</a>
+    <a class="link-card" href="https://pewpi-infinity.github.io/infinity-tools/">🛠️ Tools</a>
+    <a class="link-card" href="https://pewpi-infinity.github.io/smug_look/">🎮 Smug Look</a>
+    <a class="link-card" href="https://pewpi-infinity.github.io/repo-dashboard-hub/">📊 Dashboard</a>
+    <a class="link-card" href="https://pewpi-infinity.github.io/mongoose.os/">🔬 Mongoose</a>
+    <a class="link-card" href="https://pewpi-infinity.github.io/infinity-spark-engine/">⚡ Spark Engine</a>
+    <a class="link-card" href="https://pewpi-infinity.github.io/infinity-signal/">📡 Signal</a>
+    <a class="link-card" href="https://pewpi-infinity.github.io/infinity-core/">⚛️ Core</a>
+    <a class="link-card" href="https://pewpi-infinity.github.io/infinity-dome/">🏛️ Dome Vault</a>
+    <a class="link-card" href="https://pewpi-infinity.github.io/infinity-key/">🔑 Key Auth</a>
+    <a class="link-card" href="https://pewpi-infinity.github.io/infinity-arc/">🌈 Arc Paths</a>
+    <a class="link-card" href="https://github.com/pewpi-infinity/DJVertigo-token">🐙 Source Code</a>
+  </div>
+</div>
+
+<div class="footer">
+  🔱 DJVertigo Token — Part of <a href="https://pewpi-infinity.github.io/infinity-crown-index/">Infinity Crown System</a> — 976+ Repos
+</div>
+
+<script>
+// ══ Tabs ══
+function showTab(name, el) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  el.classList.add('active');
+}
+
+// ══ Price Engine ══
+let tokenData = null;
+let currentPrice = 1.00;
+let priceHistory = [];
+
+async function loadTokenData() {
+  try {
+    const r = await fetch('token_history.json');
+    tokenData = await r.json();
+    currentPrice = tokenData.current_price || 1.00;
+    priceHistory = tokenData.price_history || [];
+    updatePriceDisplay();
+    drawChart();
+  } catch(e) {
+    // Generate live if no file
+    simulatePrice();
+  }
+}
+
+function simulatePrice() {
+  const launch = new Date('2026-02-16T19:36:00');
+  const now = new Date();
+  const days = Math.max(0, (now - launch) / (1000*60*60*24));
+  const dailyGrowth = 1 + Math.random() * 14;
+  currentPrice = 1.00 + (days * dailyGrowth);
+  currentPrice = Math.round(currentPrice * 100) / 100;
+
+  // Generate history
+  priceHistory = [{t:0, price:1.00}];
+  let p = 1.00;
+  for (let i = 1; i <= Math.min(days * 96, 500); i++) {
+    p += 0.15 * (0.5 + Math.random());
+    priceHistory.push({t: i*15, price: Math.round(p*100)/100});
+  }
+  updatePriceDisplay();
+  drawChart();
+}
+
+function updatePriceDisplay() {
+  document.getElementById('current-price').textContent = '$' + currentPrice.toFixed(2);
+  document.getElementById('d-price').textContent = '$' + currentPrice.toFixed(2);
+  const change = currentPrice - 1.00;
+  document.getElementById('price-change').textContent = '+$' + change.toFixed(2) + ' total';
+
+  if (priceHistory.length > 1) {
+    const prices = priceHistory.map(p=>p.price);
+    document.getElementById('d-high').textContent = '$' + Math.max(...prices).toFixed(2);
+    document.getElementById('d-low').textContent = '$' + Math.min(...prices).toFixed(2);
+    document.getElementById('d-inc').textContent = priceHistory.length;
+  }
+
+  // Live micro-increment simulation
+  setInterval(function() {
+    if (Math.random() > 0.7) {
+      currentPrice += 0.15;
+      currentPrice = Math.round(currentPrice * 100) / 100;
+      document.getElementById('current-price').textContent = '$' + currentPrice.toFixed(2);
+      document.getElementById('d-price').textContent = '$' + currentPrice.toFixed(2);
+      priceHistory.push({t: priceHistory.length * 15, price: currentPrice});
+      drawChart();
+    }
+  }, 5000 + Math.random() * 10000);
+}
+
+// ══ Chart ══
+function drawChart() {
+  const canvas = document.getElementById('price-chart');
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = 250;
+
+  const data = priceHistory;
+  if (data.length < 2) return;
+
+  const prices = data.map(d=>d.price);
+  const minP = Math.min(...prices) * 0.95;
+  const maxP = Math.max(...prices) * 1.05;
+  const range = maxP - minP || 1;
+
+  const padding = {top:20, right:60, bottom:30, left:10};
+  const w = canvas.width - padding.left - padding.right;
+  const h = canvas.height - padding.top - padding.bottom;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Grid lines
+  ctx.strokeStyle = '#1a1a2e';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padding.top + (h * i / 4);
+    ctx.beginPath(); ctx.moveTo(padding.left, y); ctx.lineTo(canvas.width - padding.right, y); ctx.stroke();
+    const val = maxP - (range * i / 4);
+    ctx.fillStyle = '#666';
+    ctx.font = '10px system-ui';
+    ctx.fillText('$' + val.toFixed(2), canvas.width - padding.right + 4, y + 4);
+  }
+
+  // Price line
+  ctx.beginPath();
+  ctx.strokeStyle = '#00bfa5';
+  ctx.lineWidth = 2;
+  data.forEach((d, i) => {
+    const x = padding.left + (w * i / (data.length - 1));
+    const y = padding.top + h - ((d.price - minP) / range * h);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Gradient fill
+  const lastX = padding.left + w;
+  const lastY = padding.top + h - ((data[data.length-1].price - minP) / range * h);
+  ctx.lineTo(lastX, padding.top + h);
+  ctx.lineTo(padding.left, padding.top + h);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(0, padding.top, 0, padding.top + h);
+  grad.addColorStop(0, 'rgba(0,191,165,0.3)');
+  grad.addColorStop(1, 'rgba(0,191,165,0)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Current price dot
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#ffd700';
+  ctx.fill();
+}
+
+function chartRange(range) {
+  document.querySelectorAll('.chart-btn').forEach(b=>{b.style.background='var(--surface)';b.style.color='var(--muted)';b.style.borderColor='var(--border)'});
+  event.target.style.background='var(--accent)';event.target.style.color='#fff';event.target.style.borderColor='var(--accent)';
+  drawChart();
+}
+
+// ══ Research Terminal ══
+const TERMINAL_KNOWLEDGE = {
+  help: "Commands: price, status, hash, sector, growth, links, research, threats, oxide, piezo, c13b0, clear",
+  price: function() { return "Current DJVertigo price: $" + currentPrice.toFixed(2) + " | Growth: +$1-$15/day | Step: $0.15"; },
+  status: "🔱 DJVertigo Token — ACTIVE\nSector: Security/Guardian\nNetwork: Infinity (976+ repos)\n4-Hash: ENCODED",
+  hash: "4-Hash Layers:\n#1 Sovereign Research — Security intelligence\n#2 Validation Data — Source verification\n#3 Bibliography — Research papers\n#4 Master Zip — Blockchain package",
+  sector: "🔱 Security / Guardian Class\nRole: Protective infrastructure research\nScope: Threat detection, oxide brain monitoring, bismuth signal security",
+  growth: "Growth Model:\n- Daily range: +$1 to +$15\n- Micro-increments: $0.15 steps\n- Pattern: sporadic (pseudo-random)\n- All increases permanent",
+  links: "Network Links:\n- Crown Index: pewpi-infinity.github.io/infinity-crown-index/\n- Tools: pewpi-infinity.github.io/infinity-tools/\n- Mongoose: pewpi-infinity.github.io/mongoose.os/\n- Dashboard: pewpi-infinity.github.io/repo-dashboard-hub/",
+  research: "Active Research:\n- Bio-energy transfer security protocols\n- Oxide brain threat detection lattice\n- Bismuth signal authentication\n- Quantum self-rejection for data sanitization\n- Al/Ag hybrid shield metallurgy",
+  threats: "🔱 Threat Monitor: CLEAR\nNo active threats detected.\nBismuth signal chain: SECURE\nOxide lattice: STABLE\n4-Hash integrity: VERIFIED",
+  oxide: "Aluminum Oxide Brain — Security Layer:\nThe oxide lattice monitors for unauthorized state changes.\nAny foreign signal attempting to modify the lattice triggers quantum self-rejection,\nautomatically sanitizing the data and alerting the guardian network.",
+  piezo: "Piezoelectric Security:\nThe piezo layer detects physical tampering through pressure changes.\nAny unauthorized physical access generates a voltage spike that triggers the alert system.\nThe guardian token logs all pressure events for forensic analysis.",
+  c13b0: "C13B0 Security Architecture:\nThe 5-layer atomic framework includes built-in security at every level:\n1. Atomic substrate — tamper-evident oxide\n2. Energy layer — bio-authenticated power\n3. State layer — encrypted quantum switches\n4. Memory layer — immutable wave-archive\n5. Intelligence layer — autonomous threat response"
+};
+
+function termSend() {
+  const input = document.getElementById('term-input');
+  const cmd = input.value.trim().toLowerCase();
+  if (!cmd) return;
+  input.value = '';
+
+  const body = document.getElementById('terminal-body');
+  body.innerHTML += '<div><span class="terminal-prompt">❯ </span>' + cmd + '</div>';
+
+  if (cmd === 'clear') {
+    body.innerHTML = '<div style="color:var(--security)">Terminal cleared.</div>';
+    return;
+  }
+
+  let response = TERMINAL_KNOWLEDGE[cmd];
+  if (typeof response === 'function') response = response();
+  if (!response) {
+    response = "Unknown command: " + cmd + "\nType 'help' for available commands.";
+  }
+
+  response.split('\n').forEach(function(line) {
+    body.innerHTML += '<div>' + line + '</div>';
+  });
+  body.innerHTML += '<div>&nbsp;</div>';
+  body.scrollTop = body.scrollHeight;
+}
+
+// ══ Init ══
+document.getElementById('hash-id').textContent = Date.now().toString(36).toUpperCase();
+document.getElementById('hash-time').textContent = new Date().toISOString();
+loadTokenData();
+window.addEventListener('resize', drawChart);
+</script>
+<script defer src="https://pewpi-infinity.github.io/infinity-crown-index/js/infinity-emoji-logic.js"></script>
+</body>
+</html>
